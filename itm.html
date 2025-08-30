@@ -4,659 +4,433 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rich Life Picture Book</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts as specified in the PRD -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
     <style>
-        /* Applying typography and colors from the PRD */
-        body { 
-            font-family: 'Lato', sans-serif; 
-            background-color: #F8F9FA; 
-            color: #343A40; 
+        body {
+            font-family: 'Inter', sans-serif;
         }
-        h1, h2, h3, h4, h5, h6 { 
-            font-family: 'Poppins', sans-serif; 
-            font-weight: 700; 
+        .goal-card {
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
         }
-        /* Custom styles for toast notifications and modal transitions */
-        .toast {
-            transition: opacity 0.3s, transform 0.3s;
+        .goal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.1));
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: background 0.3s ease;
         }
-        .modal {
-            transition: opacity 0.3s;
+        .goal-card:hover::before {
+            background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
         }
-        .prose {
-            color: #343A40;
-        }
-        .prose h3 {
-            color: #0A2463;
-        }
-        .prose ul > li::before {
-            background-color: #3E92CC;
-        }
-        
-        /* Keyframe animations for modals */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-fade-in-down {
-            animation: fadeInDown 0.3s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-fade-in-up {
-            animation: fadeInUp 0.3s ease-out;
+        .plan-view {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="bg-gray-900 text-white">
 
-    <!-- Header Section -->
-    <header class="bg-[#0A2463] text-white shadow-lg sticky top-0 z-20">
-        <div class="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-book-open text-2xl text-[#3E92CC]"></i>
-                <h1 class="text-xl sm:text-2xl">Rich Life Picture Book</h1>
+    <div id="app" class="container mx-auto p-8">
+
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white">Your Rich Life Picture Book</h1>
+                <p class="text-gray-400">Turn your memories and dreams into actionable plans.</p>
             </div>
-            <button id="add-goal-btn" class="bg-[#F58A5C] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105 shadow-md flex items-center">
-                <i class="fas fa-plus mr-2"></i>
-                <span class="hidden sm:inline">Add New Goal</span>
-                <span class="sm:hidden">New Goal</span>
+            <button id="add-goal-btn-header" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition-colors duration-300">
+                <i class="fas fa-plus"></i>
+                <span>Add Goal</span>
             </button>
+        </header>
+
+        <!-- Config Error Message -->
+        <div id="config-error" class="hidden text-center py-16 bg-red-900/50 border border-red-500 rounded-xl">
+            <i class="fas fa-exclamation-triangle fa-3x text-red-400"></i>
+            <h2 class="mt-4 text-2xl font-bold">Configuration Needed</h2>
+            <p class="mt-2 text-red-200 max-w-2xl mx-auto">Please paste your `firebaseConfig` object from the Firebase Console into the script tag of this file to connect the app to your database.</p>
         </div>
-    </header>
-    
-    <!-- LocalStorage Unavailable Banner -->
-    <div id="storage-error-banner" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
-        <p class="font-bold">Storage Error</p>
-        <p>Your browser storage is unavailable. Goals cannot be saved.</p>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-16">
+            <i class="fas fa-spinner fa-spin fa-3x text-indigo-400"></i>
+            <p class="mt-4 text-gray-400">Loading your picture book...</p>
+        </div>
+
+        <!-- Goals Grid -->
+        <main id="goals-grid" class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Goal cards will be dynamically inserted here -->
+            <div id="add-goal-card" class="bg-gray-800 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center h-96 cursor-pointer hover:bg-gray-700 hover:border-gray-500 transition-colors">
+                <div class="text-center text-gray-400">
+                    <i class="fas fa-plus-circle fa-3x mb-4"></i>
+                    <p id="add-goal-card-text" class="font-semibold">Add Your First Goal</p>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Main Content: Goals Grid -->
-    <main class="container mx-auto px-4 sm:px-6 py-8">
-        <div id="goals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Goals will be dynamically inserted here -->
-        </div>
-        <!-- Empty State Message -->
-        <div id="empty-state" class="hidden col-span-full text-center py-16">
-            <div class="bg-white p-8 rounded-lg shadow-md max-w-lg mx-auto">
-                <i class="fas fa-camera-retro text-5xl text-[#3E92CC] mb-4"></i>
-                <h2 class="text-2xl font-bold text-gray-700">Your Picture Book is Empty</h2>
-                <p class="text-gray-500 mt-2">Click "Add New Goal" to start visualizing and planning your dreams.</p>
-            </div>
-        </div>
-    </main>
+    <!-- Modal for adding a new goal -->
+    <div id="goal-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800 rounded-xl p-8 w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0">
+            <h2 class="text-2xl font-bold mb-6">Add a Happy Moment</h2>
+            <form id="goal-form">
+                <div class="mb-4">
+                    <div class="flex rounded-lg bg-gray-700 p-1 mb-4">
+                        <button type="button" id="upload-tab" class="photo-source-toggle w-1/2 rounded-md py-2 text-sm font-medium bg-indigo-600 text-white">Upload File</button>
+                        <button type="button" id="url-tab" class="photo-source-toggle w-1/2 rounded-md py-2 text-sm font-medium text-gray-300">Image URL</button>
+                    </div>
 
-    <!-- Add/Edit Goal Modal -->
-    <div id="goal-modal" class="modal fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-30">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md animate-fade-in-down max-h-[90vh] overflow-hidden">
-            <form id="goal-form" novalidate class="flex flex-col h-full">
-                <!-- Modal Header -->
-                <div class="p-6 sm:p-8 pb-4 flex-shrink-0">
-                    <h2 id="modal-title" class="text-2xl font-bold text-center text-[#0A2463]">Create a New Goal</h2>
+                    <div id="upload-container">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">Upload a Photo</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-md">
+                            <div class="space-y-1 text-center">
+                                <i id="image-icon" class="fas fa-image fa-3x text-gray-500"></i>
+                                <div class="flex text-sm text-gray-400">
+                                    <label for="photo-upload" class="relative cursor-pointer bg-gray-700 rounded-md font-medium text-indigo-400 hover:text-indigo-300 focus-within:outline-none p-1">
+                                        <span>Upload a file</span>
+                                        <input id="photo-upload" name="photo-upload" type="file" class="sr-only" accept="image/*">
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="url-container" class="hidden">
+                        <label for="photo-url" class="block text-gray-400 text-sm font-bold mb-2">Paste Image URL</label>
+                         <input type="url" id="photo-url" placeholder="https://example.com/image.jpg" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
                 </div>
 
-                <!-- Scrollable Form Content -->
-                <div class="p-6 sm:p-8 pt-0 overflow-y-auto flex-grow">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-title">Goal Title</label>
-                        <input type="text" id="goal-title" maxlength="100" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#3E92CC]" required>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-description">Why is this important to you?</label>
-                        <textarea id="goal-description" maxlength="500" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#3E92CC] h-24" required></textarea>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex border-b border-gray-200">
-                            <button type="button" id="url-tab" class="px-4 py-2 bg-white text-[#3E92CC] border-b-2 border-[#3E92CC] font-semibold -mb-px">Image URL</button>
-                            <button type="button" id="upload-tab" class="px-4 py-2 text-gray-500 font-semibold">Upload File</button>
-                        </div>
-                        <div id="url-input-container" class="mt-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-image-url">Image URL</label>
-                            <input type="url" id="goal-image-url" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#3E92CC]" placeholder="https://images.unsplash.com/...">
-                        </div>
-                        <div id="upload-input-container" class="hidden mt-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-image-upload">Upload Image</label>
-                            <input type="file" id="goal-image-upload" class="shadow-sm block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#3E92CC] file:text-white hover:file:bg-opacity-90" accept="image/png, image/jpeg">
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <img id="image-preview" src="" alt="Image Preview" class="w-full h-48 object-cover rounded bg-gray-100 hidden border">
-                    </div>
-                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-savings">Current Savings ($)</label>
-                        <input type="number" id="goal-savings" min="0" class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#3E92CC]" value="0" required>
-                    </div>
-                    <input type="hidden" id="goal-id">
+                 <div class="mb-4 text-center">
+                    <img id="image-preview" class="hidden mx-auto h-24 w-auto rounded" src="" alt="Image preview"/>
                 </div>
 
-                <!-- Modal Footer -->
-                <div class="p-6 sm:p-8 pt-4 flex items-center justify-between flex-shrink-0 border-t">
-                    <button type="button" id="cancel-goal-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Cancel</button>
-                    <button type="submit" id="submit-goal-btn" class="bg-[#F58A5C] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg transition w-48 flex items-center justify-center">
-                        <span id="submit-btn-text">Create Plan</span>
-                        <i id="loading-spinner" class="fas fa-spinner fa-spin hidden ml-2"></i>
-                    </button>
+                <div class="mb-4">
+                    <label for="goal-title" class="block text-gray-400 text-sm font-bold mb-2">Title</label>
+                    <input type="text" id="goal-title" placeholder="e.g., Trip to the Japanese Alps" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="goal-description" class="block text-gray-400 text-sm font-bold mb-2">Why does this make you happy?</label>
+                    <textarea id="goal-description" rows="3" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="It represents freedom and adventure..." required></textarea>
+                </div>
+
+                <div class="mb-6">
+                    <label for="current-savings" class="block text-gray-400 text-sm font-bold mb-2">Current Savings ($)</label>
+                    <input type="number" id="current-savings" placeholder="0" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required value="0">
+                </div>
+
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="cancel-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-xl transition-colors">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl transition-colors">Add to Picture Book</button>
                 </div>
             </form>
         </div>
     </div>
     
-    <!-- Plan View Modal -->
-    <div id="plan-modal" class="modal fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-40">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl animate-fade-in-up flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-start p-6 sm:p-8 border-b flex-shrink-0">
-                <h2 id="plan-title" class="text-3xl font-bold text-[#0A2463]">Action Plan</h2>
-                <button id="dismiss-plan-btn-x" class="text-gray-400 hover:text-gray-600 text-3xl leading-none -mt-2 -mr-2">&times;</button>
+    <!-- Modal for showing the generated plan -->
+    <div id="plan-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50 overflow-y-auto">
+        <div class="bg-gray-800/80 plan-view rounded-xl p-8 w-full max-w-3xl transform transition-all duration-300 scale-95 opacity-0">
+            <div class="flex justify-between items-start">
+                 <div>
+                    <h2 id="plan-title" class="text-3xl font-bold mb-2">Your Action Plan</h2>
+                    <h3 id="plan-cost" class="text-xl font-semibold text-green-400 mb-4"></h3>
+                 </div>
+                 <button type="button" id="close-plan-btn" class="text-gray-400 text-4xl leading-none hover:text-white transition-colors">&times;</button>
             </div>
-            <div id="plan-content" class="prose max-w-none text-gray-800 p-6 sm:p-8 overflow-y-auto flex-grow">
-                <!-- AI-generated plan will be inserted here -->
-            </div>
-            <div class="p-6 sm:p-8 border-t flex-shrink-0">
-                <div id="plan-view-controls" class="text-right space-x-2">
-                    <button id="dismiss-plan-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Dismiss</button>
-                    <button id="edit-plan-btn" class="bg-[#3E92CC] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg transition">Edit Plan</button>
-                </div>
-                <div id="plan-edit-controls" class="hidden text-right space-x-2">
-                    <button id="cancel-edit-plan-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Cancel</button>
-                    <button id="save-plan-btn" class="bg-[#F58A5C] hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg transition">Save Plan</button> <!-- This is the "Submit" button -->
-                </div>
+            <div id="plan-content" class="prose prose-invert max-w-none text-gray-300 max-h-[60vh] overflow-y-auto pr-4">
+                <!-- AI Generated content goes here -->
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2">
-        <p id="toast-message"></p>
-    </div>
-    
-    <!-- Custom Confirmation Modal -->
-    <div id="confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-            <h3 class="text-xl font-bold text-center mb-4">Are you sure?</h3>
-            <p id="confirm-message" class="text-center text-gray-600 mb-6">Do you really want to delete this goal? This action cannot be undone.</p>
-            <div class="flex justify-center space-x-4">
-                <button id="confirm-cancel-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancel</button>
-                <button id="confirm-delete-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg">Delete</button>
-            </div>
-        </div>
-    </div>
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+        // --- PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // ----------------------------------------------------
 
-    <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM Element References ---
-            const addGoalBtn = document.getElementById('add-goal-btn');
+            // --- DOM Elements ---
+            const loadingState = document.getElementById('loading-state');
+            const configError = document.getElementById('config-error');
+            const addGoalBtnHeader = document.getElementById('add-goal-btn-header');
+            const addGoalCard = document.getElementById('add-goal-card');
             const goalModal = document.getElementById('goal-modal');
-            const cancelGoalBtn = document.getElementById('cancel-goal-btn');
+            const goalModalContent = goalModal.querySelector('div');
+            const planModal = document.getElementById('plan-modal');
+            const planModalContent = planModal.querySelector('div');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const closePlanBtn = document.getElementById('close-plan-btn');
             const goalForm = document.getElementById('goal-form');
             const goalsGrid = document.getElementById('goals-grid');
-            const emptyState = document.getElementById('empty-state');
-            const modalTitle = document.getElementById('modal-title');
-            const submitBtnText = document.getElementById('submit-btn-text');
-            const loadingSpinner = document.getElementById('loading-spinner');
-            const submitGoalBtn = document.getElementById('submit-goal-btn');
-            const storageErrorBanner = document.getElementById('storage-error-banner');
-            
-            const urlTab = document.getElementById('url-tab');
-            const uploadTab = document.getElementById('upload-tab');
-            const urlInputContainer = document.getElementById('url-input-container');
-            const uploadInputContainer = document.getElementById('upload-input-container');
-            const goalImageUrlInput = document.getElementById('goal-image-url');
-            const goalImageUploadInput = document.getElementById('goal-image-upload');
+            const photoUploadInput = document.getElementById('photo-upload');
             const imagePreview = document.getElementById('image-preview');
+            const imageIcon = document.getElementById('image-icon');
+            const addGoalCardText = document.getElementById('add-goal-card-text');
+            const uploadTab = document.getElementById('upload-tab');
+            const urlTab = document.getElementById('url-tab');
+            const uploadContainer = document.getElementById('upload-container');
+            const urlContainer = document.getElementById('url-container');
+            const photoUrlInput = document.getElementById('photo-url');
             
-            const planModal = document.getElementById('plan-modal');
-            const planTitle = document.getElementById('plan-title');
-            const planContent = document.getElementById('plan-content');
-            const dismissPlanBtn = document.getElementById('dismiss-plan-btn');
-            const dismissPlanBtnX = document.getElementById('dismiss-plan-btn-x');
-            const editPlanBtn = document.getElementById('edit-plan-btn');
-            const savePlanBtn = document.getElementById('save-plan-btn');
-            const cancelEditPlanBtn = document.getElementById('cancel-edit-plan-btn');
-            const planViewControls = document.getElementById('plan-view-controls');
-            const planEditControls = document.getElementById('plan-edit-controls');
+             // --- CHECK FOR FIREBASE CONFIG ---
+            if (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID") {
+                loadingState.classList.add('hidden');
+                goalsGrid.classList.add('hidden');
+                configError.classList.remove('hidden');
+                return; // Stop the app from running
+            }
 
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-
-            const confirmModal = document.getElementById('confirm-modal');
-            const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
-            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-            
             // --- State Management ---
             let goals = [];
-            let goalToEditId = null;
-            let goalToDeleteId = null;
-            let currentPlanViewGoalId = null;
-            let uploadedImageDataUrl = null; 
+            let userId = null;
+            let goalsCollectionRef;
 
-            // --- LocalStorage Logic ---
-            const isStorageAvailable = () => {
-                try {
-                    const test = '__storage_test__';
-                    localStorage.setItem(test, test);
-                    localStorage.removeItem(test);
-                    return true;
-                } catch (e) {
-                    return false;
-                }
-            };
-            
-            const saveGoalsToStorage = () => {
-                if (isStorageAvailable()) {
-                    localStorage.setItem('richLifeGoals', JSON.stringify(goals));
-                }
-            };
-            
-            const loadGoalsFromStorage = () => {
-                if (isStorageAvailable()) {
-                    const storedGoals = localStorage.getItem('richLifeGoals');
-                    try {
-                        goals = storedGoals ? JSON.parse(storedGoals) : [];
-                    } catch (error) {
-                        console.error("Could not parse goals from localStorage:", error);
-                        goals = []; // Reset to empty array if data is corrupt
-                        localStorage.removeItem('richLifeGoals'); // Clear the corrupt data
-                    }
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+
+            // --- Main Application Logic ---
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in anonymously.
+                    userId = user.uid;
+                    goalsCollectionRef = collection(db, 'users', userId, 'goals');
+                    listenForGoals();
                 } else {
-                    storageErrorBanner.classList.remove('hidden');
+                    // User is signed out.
+                    signInAnonymously(auth).catch((error) => {
+                        console.error("Anonymous sign-in failed:", error);
+                        alert("Could not connect to the database. Please check your Firebase configuration and refresh the page.");
+                    });
                 }
-            };
-
-            // --- Image Processing (as per PRD) ---
-            const processImage = (file) => {
-                return new Promise((resolve, reject) => {
-                    const MAX_WIDTH = 1920;
-                    const reader = new FileReader();
-
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            let width = img.width;
-                            let height = img.height;
-                            if (width > MAX_WIDTH) {
-                                height = (MAX_WIDTH / width) * height;
-                                width = MAX_WIDTH;
-                            }
-                            canvas.width = width;
-                            canvas.height = height;
-                            ctx.drawImage(img, 0, 0, width, height);
-                            resolve(canvas.toDataURL('image/jpeg', 0.8));
-                        };
-                        img.onerror = reject;
-                        img.src = event.target.result;
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
+            });
+            
+            const listenForGoals = () => {
+                onSnapshot(goalsCollectionRef, (snapshot) => {
+                    goals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderGoals();
+                    loadingState.style.display = 'none';
+                    goalsGrid.classList.remove('hidden');
+                    goalsGrid.classList.add('grid');
+                }, (error) => {
+                    console.error("Error listening for goals:", error);
+                    alert("Could not fetch your goals. Please check your connection and refresh.");
                 });
             };
 
-            // --- Rendering Logic ---
             const renderGoals = () => {
-                goalsGrid.innerHTML = '';
-                if (goals.length === 0) {
-                    emptyState.classList.remove('hidden');
-                } else {
-                    emptyState.classList.add('hidden');
-                    goals.forEach(goal => {
-                        const progress = goal.targetCost > 0 ? (goal.currentSavings / goal.targetCost) * 100 : 0;
-                        const savingsFormatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(goal.currentSavings);
-                        const targetFormatted = goal.targetCost ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(goal.targetCost) : 'Plan not set';
+                goalsGrid.innerHTML = ''; 
 
+                if (goals.length > 0) {
+                    addGoalCardText.textContent = 'Add Another Goal';
+                    goals.forEach(goal => {
                         const goalCard = document.createElement('div');
-                        goalCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300';
-                        goalCard.innerHTML = `
-                            <div class="relative h-56 bg-cover bg-center" style="background-image: url('${goal.imageUrl}')" onerror="this.style.backgroundImage='url(https://placehold.co/800x600/0A2463/F8F9FA?text=Image+Not+Found)'">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4">
-                                    <h3 class="text-white text-xl font-bold">${goal.title}</h3>
-                                    ${goal.plan ? `
-                                    <div class="w-full bg-gray-200/50 rounded-full h-2.5 mt-2">
-                                        <div class="bg-[#3E92CC] h-2.5 rounded-full" style="width: ${progress > 100 ? 100 : progress}%"></div>
+                        goalCard.className = 'goal-card rounded-xl h-96 flex flex-col justify-end p-6 text-white shadow-lg';
+                        goalCard.style.backgroundImage = `url('${goal.image}')`;
+                        goalCard.dataset.id = goal.id;
+
+                        let progressHTML = '';
+                        let buttonHTML = `
+                            <button data-id="${goal.id}" class="generate-plan-btn mt-4 bg-indigo-600/80 hover:bg-indigo-500/90 text-white font-bold py-2 px-4 rounded-xl transition-colors backdrop-blur-sm w-full">
+                                <i class="fas fa-magic-wand-sparkles mr-2"></i>Create Plan & Budget
+                            </button>`;
+
+                        if (goal.targetCost > 0) {
+                            const percentage = Math.min(100, Math.round((goal.currentSavings / goal.targetCost) * 100));
+                            progressHTML = `
+                                <div class="mt-4">
+                                    <div class="flex justify-between items-center text-sm font-medium">
+                                        <span>$${goal.currentSavings.toLocaleString()}</span>
+                                        <span>$${goal.targetCost.toLocaleString()}</span>
                                     </div>
-                                    <p class="text-white text-sm mt-1">${savingsFormatted} / ${targetFormatted}</p>
-                                    ` : '<p class="text-white/80 text-sm mt-1 italic">Ready to make a plan?</p>'}
+                                    <div class="w-full bg-gray-200/30 rounded-full h-2.5 mt-1">
+                                        <div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="p-4 flex justify-between items-center">
-                                <button data-id="${goal.id}" class="view-plan-btn ${!goal.plan && 'hidden'} bg-[#3E92CC] text-white py-2 px-4 rounded-lg hover:bg-opacity-90 transition">View Plan</button>
-                                <div class="flex-grow"></div>
-                                <div>
-                                    <button data-id="${goal.id}" class="edit-goal-btn text-gray-500 hover:text-[#3E92CC] text-lg mr-2 p-2"><i class="fas fa-edit"></i></button>
-                                    <button data-id="${goal.id}" class="delete-goal-btn text-gray-500 hover:text-red-500 text-lg p-2"><i class="fas fa-trash"></i></button>
-                                </div>
+                            `;
+                            buttonHTML = `
+                                <button data-id="${goal.id}" class="view-plan-btn mt-4 bg-green-600/80 hover:bg-green-500/90 text-white font-bold py-2 px-4 rounded-xl transition-colors backdrop-blur-sm w-full">
+                                    <i class="fas fa-eye mr-2"></i>View Plan (${percentage}%)
+                                </button>`;
+                        }
+
+                        goalCard.innerHTML = `
+                            <div class="relative z-10">
+                                <h3 class="text-2xl font-bold">${goal.title}</h3>
+                                <p class="text-sm text-gray-300 mt-1">${goal.description.substring(0, 100)}...</p>
+                                ${progressHTML}
+                                ${buttonHTML}
                             </div>
                         `;
                         goalsGrid.appendChild(goalCard);
                     });
-                }
-            };
-            
-            // --- Modal Handling ---
-            const openGoalModal = (goalId = null) => {
-                goalToEditId = goalId;
-                goalForm.reset();
-                imagePreview.classList.add('hidden');
-                imagePreview.src = '';
-                uploadedImageDataUrl = null;
-                goalImageUploadInput.value = '';
-                document.getElementById('url-tab').dispatchEvent(new MouseEvent('click'));
-
-                if (goalId) {
-                    const goal = goals.find(g => g.id === goalId);
-                    modalTitle.textContent = 'Edit Your Goal';
-                    document.getElementById('goal-title').value = goal.title;
-                    document.getElementById('goal-description').value = goal.description;
-                    document.getElementById('goal-image-url').value = goal.imageUrl;
-                    imagePreview.src = goal.imageUrl;
-                    imagePreview.classList.remove('hidden');
-                    document.getElementById('goal-savings').value = goal.currentSavings;
-                    document.getElementById('goal-id').value = goal.id;
-                    submitBtnText.textContent = 'Save Changes';
                 } else {
-                    modalTitle.textContent = 'Create a New Goal';
-                    submitBtnText.textContent = 'Create Plan & Budget';
+                    addGoalCardText.textContent = 'Add Your First Goal';
                 }
-                goalModal.classList.remove('hidden');
-                goalModal.classList.add('flex');
-            };
-
-            const closeGoalModal = () => {
-                goalModal.classList.add('hidden');
-                goalModal.classList.remove('flex');
-                goalToEditId = null;
-                uploadedImageDataUrl = null;
-            };
-
-            const convertMarkdownToHtml = (markdown) => {
-                // Defensive check to prevent crashes on bad data
-                if (typeof markdown !== 'string' || !markdown) {
-                    return '<p>No plan available.</p>';
-                }
-
-                // This regex chain is complex; added comments for clarity
-                return markdown
-                    // ### Header -> <h3>...</h3>
-                    .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold mb-2">$1</h3>')
-                    // 1. Item -> <li>Item</li>
-                    .replace(/^\d+\. (.*$)/gim, '<li class="mb-1">$1</li>')
-                    // Wrap list items in <ul> tags. This is a multi-step process.
-                    .replace(/^(<li.*<\/li>)$/gim, '<ul>$1</ul>')
-                    // Join adjacent lists
-                    .replace(/<\/ul>\n<ul>/g, '');
-            };
-
-            const openPlanModal = (goal) => {
-                currentPlanViewGoalId = goal.id;
-                planTitle.textContent = goal.title;
-                planContent.innerHTML = convertMarkdownToHtml(goal.plan);
-                planViewControls.classList.remove('hidden');
-                planEditControls.classList.add('hidden');
-                planModal.classList.remove('hidden');
-                planModal.classList.add('flex');
+                goalsGrid.appendChild(addGoalCard);
             };
             
-            const closePlanModal = () => {
-                planModal.classList.add('hidden');
-                planModal.classList.remove('flex');
-                currentPlanViewGoalId = null;
-            };
-
-            const openConfirmModal = (goalId) => {
-                goalToDeleteId = goalId;
-                confirmModal.classList.remove('hidden');
-                confirmModal.classList.add('flex');
-            };
-
-            const closeConfirmModal = () => {
-                confirmModal.classList.add('hidden');
-                confirmModal.classList.remove('flex');
-                goalToDeleteId = null;
-            };
-
-            // --- Notifications ---
-            const showToast = (message, isError = false) => {
-                toastMessage.textContent = message;
-                toast.className = `toast fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
-                toast.classList.remove('opacity-0', 'translate-y-2');
-                setTimeout(() => {
-                    toast.classList.add('opacity-0', 'translate-y-2');
-                }, 3000);
-            };
-
-            // --- AI Plan Simulation ---
-            const generatePlanWithAI = async (title, description) => {
-                console.log("Simulating AI Plan Generation for:", { title, description });
-                return new Promise(resolve => {
+            const toggleModal = (modal, content, show) => {
+                if (show) {
+                    modal.classList.remove('hidden');
+                    setTimeout(() => content.classList.add('scale-100', 'opacity-100'), 10);
+                } else {
+                    content.classList.remove('scale-100', 'opacity-100');
                     setTimeout(() => {
-                        const keywords = (title + ' ' + description).toLowerCase();
-                        let plan, estimatedCost;
-                        if (keywords.includes('renovat') || keywords.includes('kitchen')) {
-                           plan = `### Kitchen Renovation Plan\n1. Finalize design and layout.\n2. Order cabinets, countertops, and appliances.\n3. Complete demolition and rough-in plumbing/electrical.\n4. Install flooring, cabinets, and countertops, then paint.`;
-                           estimatedCost = 15000;
-                        } else if (keywords.includes('style') || keywords.includes('wardrobe')) {
-                            plan = `### Personal Style Upgrade\n1. Create a mood board on Pinterest.\n2. Purge closet of items that don't fit your vision.\n3. Identify and purchase 5 key investment pieces.\n4. Hire a tailor to ensure a perfect fit.`;
-                            estimatedCost = 1500;
-                        } else { // Default/Travel
-                            plan = `### Trip Plan for ${title}\n1. Research and book flights & accommodation.\n2. Outline a daily itinerary of activities.\n3. Arrange for any necessary visas or travel documents.\n4. Pack bags and confirm all reservations.`;
-                            estimatedCost = Math.floor(Math.random() * 4000) + 1000;
-                        }
-                        resolve({ plan, estimatedCost });
-                    }, 2500);
-                });
+                        modal.classList.add('hidden');
+                        goalForm.reset();
+                        imagePreview.src = '';
+                        imagePreview.classList.add('hidden');
+                        imageIcon.classList.remove('hidden');
+                        uploadContainer.classList.remove('hidden');
+                        urlContainer.classList.add('hidden');
+                        uploadTab.classList.add('bg-indigo-600', 'text-white');
+                        urlTab.classList.remove('bg-indigo-600', 'text-white');
+                        urlTab.classList.add('text-gray-300');
+                    }, 300);
+                }
             };
+
+            const generatePlan = async (goalId) => {
+                const goal = goals.find(g => g.id === goalId);
+                if (!goal) return;
+
+                const planContent = document.getElementById('plan-content');
+                document.getElementById('plan-title').textContent = `Action Plan: ${goal.title}`;
+                document.getElementById('plan-cost').textContent = '';
+                planContent.innerHTML = '<div class="flex items-center justify-center p-8"><i class="fas fa-spinner fa-spin fa-3x text-indigo-400"></i><p class="ml-4 text-lg">Dreaming up your plan...</p></div>';
+                toggleModal(planModal, planModalContent, true);
+
+                // This is still the MOCK AI call. You would replace this with a real fetch to Gemini API.
+                await new Promise(resolve => setTimeout(resolve, 2500)); 
+                let mockResponse;
+                const goalText = (goal.title + ' ' + goal.description).toLowerCase();
+                 if (goalText.includes('renovat') || goalText.includes('backyard') || goalText.includes('kitchen') || goalText.includes('remodel')) {
+                    mockResponse = { plan: `<h3>${goal.title} Plan</h3>...`, estimatedCost: 11000 + Math.floor(Math.random() * 5000) };
+                } else if (goalText.includes('wardrobe') || goalText.includes('style') || goalText.includes('fashion') || goalText.includes('clothes')) {
+                    mockResponse = { plan: `<h3>${goal.title} Style Upgrade</h3>...`, estimatedCost: 1100 + Math.floor(Math.random() * 500) };
+                } else if (goalText.includes('fitness') || goalText.includes('health') || goalText.includes('marathon') || goalText.includes('gym')) {
+                     mockResponse = { plan: `<h3>${goal.title} Fitness Goal</h3>...`, estimatedCost: 800 + Math.floor(Math.random() * 300) };
+                } else { 
+                    mockResponse = { plan: `<h3>Trip to ${goal.title}</h3>...`, estimatedCost: 4000 + Math.floor(Math.random() * 2000) };
+                }
+
+                // Update goal object in Firestore
+                const goalDocRef = doc(db, 'users', userId, 'goals', goalId);
+                await updateDoc(goalDocRef, {
+                    plan: mockResponse.plan,
+                    targetCost: mockResponse.estimatedCost
+                });
+                
+                // onSnapshot will handle re-rendering automatically
+                document.getElementById('plan-cost').textContent = `Estimated Cost: $${mockResponse.estimatedCost.toLocaleString()}`;
+                planContent.innerHTML = mockResponse.plan;
+            };
+
+            const viewPlan = (goalId) => {
+                 const goal = goals.find(g => g.id === goalId);
+                 if (!goal) return;
+                 document.getElementById('plan-title').textContent = `Action Plan: ${goal.title}`;
+                 document.getElementById('plan-cost').textContent = `Estimated Cost: $${goal.targetCost.toLocaleString()}`;
+                 document.getElementById('plan-content').innerHTML = goal.plan;
+                 toggleModal(planModal, planModalContent, true);
+            }
 
             // --- Event Listeners ---
-            addGoalBtn.addEventListener('click', () => openGoalModal());
-            cancelGoalBtn.addEventListener('click', closeGoalModal);
+            addGoalBtnHeader.addEventListener('click', () => toggleModal(goalModal, goalModalContent, true));
+            addGoalCard.addEventListener('click', () => toggleModal(goalModal, goalModalContent, true));
+            cancelBtn.addEventListener('click', () => toggleModal(goalModal, goalModalContent, false));
+            closePlanBtn.addEventListener('click', () => toggleModal(planModal, planModalContent, false));
             
-            // Plan Modal Listeners
-            dismissPlanBtn.addEventListener('click', closePlanModal);
-            dismissPlanBtnX.addEventListener('click', closePlanModal);
-            
-            editPlanBtn.addEventListener('click', () => {
-                const goal = goals.find(g => g.id === currentPlanViewGoalId);
-                planContent.innerHTML = `<textarea id="plan-editor" class="w-full h-full border rounded p-2 font-mono text-sm resize-none">${goal.plan}</textarea>`;
-                planViewControls.classList.add('hidden');
-                planEditControls.classList.remove('hidden');
-            });
-
-            cancelEditPlanBtn.addEventListener('click', () => {
-                const goal = goals.find(g => g.id === currentPlanViewGoalId);
-                planContent.innerHTML = convertMarkdownToHtml(goal.plan);
-                planViewControls.classList.remove('hidden');
-                planEditControls.classList.add('hidden');
-            });
-
-            savePlanBtn.addEventListener('click', () => {
-                const goalIndex = goals.findIndex(g => g.id === currentPlanViewGoalId);
-                const newPlanText = document.getElementById('plan-editor').value;
-                goals[goalIndex].plan = newPlanText;
-                saveGoalsToStorage();
-                planContent.innerHTML = convertMarkdownToHtml(newPlanText);
-                planViewControls.classList.remove('hidden');
-                planEditControls.classList.add('hidden');
-                showToast('Plan updated successfully!');
-            });
-
-            // Image Upload Tabs & Preview
-            urlTab.addEventListener('click', () => {
-                urlTab.classList.add('text-[#3E92CC]', 'border-[#3E92CC]', '-mb-px', 'border-b-2');
-                urlTab.classList.remove('text-gray-500');
-                uploadTab.classList.add('text-gray-500');
-                uploadTab.classList.remove('text-[#3E92CC]', 'border-[#3E92CC]', '-mb-px', 'border-b-2');
-                
-                urlInputContainer.classList.remove('hidden');
-                uploadInputContainer.classList.add('hidden');
-                goalImageUploadInput.value = '';
-                uploadedImageDataUrl = null;
-                goalImageUrlInput.dispatchEvent(new Event('input'));
+            [goalModal, planModal].forEach(modal => {
+                 modal.addEventListener('click', (e) => { if (e.target === modal) toggleModal(modal, modal.querySelector('div'), false); });
             });
 
             uploadTab.addEventListener('click', () => {
-                uploadTab.classList.add('text-[#3E92CC]', 'border-[#3E92CC]', '-mb-px', 'border-b-2');
-                uploadTab.classList.remove('text-gray-500');
-                urlTab.classList.add('text-gray-500');
-                urlTab.classList.remove('text-[#3E92CC]', 'border-[#3E92CC]', '-mb-px', 'border-b-2');
-                
-                uploadInputContainer.classList.remove('hidden');
-                urlInputContainer.classList.add('hidden');
-                const oldUrl = goalImageUrlInput.value;
-                goalImageUrlInput.value = '';
-                if(oldUrl) imagePreview.classList.add('hidden');
+                uploadContainer.classList.remove('hidden'); urlContainer.classList.add('hidden');
+                uploadTab.classList.add('bg-indigo-600', 'text-white'); urlTab.classList.remove('bg-indigo-600', 'text-white');
+            });
+            urlTab.addEventListener('click', () => {
+                uploadContainer.classList.add('hidden'); urlContainer.classList.remove('hidden');
+                urlTab.classList.add('bg-indigo-600', 'text-white'); uploadTab.classList.remove('bg-indigo-600', 'text-white');
             });
 
-            goalImageUrlInput.addEventListener('input', () => {
-                const url = goalImageUrlInput.value.trim();
-                if (url) {
-                    imagePreview.src = url;
-                    imagePreview.classList.remove('hidden');
-                } else if (!uploadedImageDataUrl) {
-                    imagePreview.classList.add('hidden');
-                }
+            photoUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => { imagePreview.src = event.target.result; imagePreview.classList.remove('hidden'); };
+                reader.readAsDataURL(file);
             });
-
-            goalImageUploadInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (!file) {
-                    uploadedImageDataUrl = null;
-                    imagePreview.classList.add('hidden');
-                    return;
-                };
-
-                if (file.size > 5 * 1024 * 1024) {
-                    showToast('File size cannot exceed 5MB.', true);
-                    goalImageUploadInput.value = '';
-                    return;
-                }
-
-                try {
-                    const processedDataUrl = await processImage(file);
-                    uploadedImageDataUrl = processedDataUrl;
-                    imagePreview.src = processedDataUrl;
-                    imagePreview.classList.remove('hidden');
-                } catch (error) {
-                    showToast('Could not process image. Please try another file.', true);
-                    console.error('Image processing error:', error);
-                    uploadedImageDataUrl = null;
-                    imagePreview.classList.add('hidden');
-                }
+            photoUrlInput.addEventListener('input', () => {
+                const url = photoUrlInput.value.trim();
+                imagePreview.src = url;
+                imagePreview.classList.toggle('hidden', !url);
             });
 
             goalForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
-                submitGoalBtn.disabled = true;
-                loadingSpinner.classList.remove('hidden');
-                submitBtnText.textContent = goalToEditId ? 'Saving...' : 'Dreaming...';
-
-                let imageUrl;
-                const isUrlTabActive = !urlInputContainer.classList.contains('hidden');
-                if (isUrlTabActive) {
-                    imageUrl = goalImageUrlInput.value.trim();
-                } else {
-                    imageUrl = uploadedImageDataUrl;
+                let imageUrl = '';
+                if (!uploadContainer.classList.contains('hidden')) { 
+                    if (photoUploadInput.files.length > 0 && imagePreview.src) imageUrl = imagePreview.src;
+                    else { alert('Please select an image to upload.'); return; }
+                } else { 
+                    imageUrl = photoUrlInput.value.trim();
+                    if (!imageUrl) { alert('Please enter an image URL.'); return; }
                 }
 
-                if (!imageUrl) {
-                    showToast('Please provide an image URL or upload a file.', true);
-                    submitGoalBtn.disabled = false;
-                    loadingSpinner.classList.add('hidden');
-                    submitBtnText.textContent = goalToEditId ? 'Save Changes' : 'Create Plan & Budget';
-                    return;
-                }
-
-                const formData = {
+                const newGoal = {
                     title: document.getElementById('goal-title').value,
                     description: document.getElementById('goal-description').value,
-                    imageUrl: imageUrl,
-                    currentSavings: parseFloat(document.getElementById('goal-savings').value)
+                    image: imageUrl,
+                    currentSavings: parseFloat(document.getElementById('current-savings').value) || 0,
+                    targetCost: null,
+                    plan: null
                 };
 
-                if (goalToEditId) {
-                    const goalIndex = goals.findIndex(g => g.id === goalToEditId);
-                    if (goalIndex !== -1) {
-                        goals[goalIndex] = { ...goals[goalIndex], ...formData };
-                        saveGoalsToStorage();
-                        renderGoals();
-                        closeGoalModal();
-                        showToast('Goal updated successfully!');
-                    }
-                } else {
-                    try {
-                        const aiResponse = await generatePlanWithAI(formData.title, formData.description);
-                        const newGoal = {
-                            id: Date.now(),
-                            ...formData,
-                            plan: aiResponse.plan,
-                            targetCost: aiResponse.estimatedCost
-                        };
-                        goals.push(newGoal);
-                        saveGoalsToStorage();
-                        renderGoals();
-                        closeGoalModal();
-                        showToast('Goal and plan created!');
-                    } catch (error) {
-                        console.error('AI generation failed:', error);
-                        showToast('Could not generate a plan. Please try again.', true);
-                    }
+                try {
+                    await addDoc(goalsCollectionRef, newGoal);
+                    // onSnapshot will handle the re-render.
+                    toggleModal(goalModal, goalModalContent, false);
+                } catch (error) {
+                    console.error("Error adding document: ", error);
+                    alert("Failed to save goal. Please try again.");
                 }
-
-                submitGoalBtn.disabled = false;
-                loadingSpinner.classList.add('hidden');
             });
-            
+
             goalsGrid.addEventListener('click', (e) => {
-                const target = e.target.closest('button');
-                if (!target) return;
-                const id = parseInt(target.dataset.id);
-                if (target.classList.contains('edit-goal-btn')) {
-                    openGoalModal(id);
-                } else if (target.classList.contains('delete-goal-btn')) {
-                    openConfirmModal(id);
-                } else if (target.classList.contains('view-plan-btn')) {
-                    const goal = goals.find(g => g.id === id);
-                    openPlanModal(goal);
-                }
-            });
+                const targetButton = e.target.closest('button');
+                if (!targetButton) return;
+                
+                const goalId = targetButton.dataset.id;
+                if (!goalId) return;
 
-            confirmCancelBtn.addEventListener('click', closeConfirmModal);
-            confirmDeleteBtn.addEventListener('click', () => {
-                if (goalToDeleteId) {
-                    goals = goals.filter(g => g.id !== goalToDeleteId);
-                    saveGoalsToStorage();
-                    renderGoals();
-                    closeConfirmModal();
-                    showToast('Goal deleted.');
-                }
+                if (targetButton.classList.contains('generate-plan-btn')) generatePlan(goalId);
+                else if (targetButton.classList.contains('view-plan-btn')) viewPlan(goalId);
             });
-
-            loadGoalsFromStorage();
-            renderGoals();
         });
     </script>
 </body>
