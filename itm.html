@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rich Life Picture Book</title>
+    <title>Your Rich Life</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
         .goal-card {
             background-size: cover;
@@ -37,14 +39,14 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="bg-red-300 text-gray-800">
 
     <div id="app" class="container mx-auto p-8">
 
         <header class="flex justify-between items-center mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-white">Your Rich Life Picture Book</h1>
-                <p class="text-gray-400">Turn your memories and dreams into actionable plans.</p>
+                <h1 class="text-3xl font-bold text-gray-900">Your Rich Life</h1>
+                <p class="text-gray-700">A picture book for your dreams.</p>
             </div>
             <button id="add-goal-btn-header" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition-colors duration-300">
                 <i class="fas fa-plus"></i>
@@ -53,13 +55,13 @@
         </header>
 
         <div id="loading-state" class="text-center py-16">
-            <i class="fas fa-spinner fa-spin fa-3x text-indigo-400"></i>
-            <p class="mt-4 text-gray-400">Loading your picture book...</p>
+            <i class="fas fa-spinner fa-spin fa-3x text-indigo-500"></i>
+            <p class="mt-4 text-gray-600">Loading your picture book...</p>
         </div>
 
         <main id="goals-grid" class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div id="add-goal-card" class="bg-gray-800 border-2 border-dashed border-gray-600 rounded-xl flex items-center justify-center h-96 cursor-pointer hover:bg-gray-700 hover:border-gray-500 transition-colors">
-                <div class="text-center text-gray-400">
+            <div id="add-goal-card" class="bg-white/50 border-2 border-dashed border-gray-400 rounded-xl flex items-center justify-center h-96 cursor-pointer hover:bg-white/70 hover:border-gray-500 transition-colors">
+                <div class="text-center text-gray-600">
                     <i class="fas fa-plus-circle fa-3x mb-4"></i>
                     <p id="add-goal-card-text" class="font-semibold">Add Your First Goal</p>
                 </div>
@@ -69,7 +71,7 @@
 
     <div id="goal-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50 overflow-y-auto">
         <div class="bg-gray-800 rounded-xl p-8 w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0">
-            <h2 id="modal-title" class="text-2xl font-bold mb-6">Add a Happy Moment</h2>
+            <h2 id="modal-title" class="text-2xl font-bold mb-6 text-white">Add a Happy Moment</h2>
             <form id="goal-form">
                 <input type="hidden" id="goal-id">
                 <div class="mb-4">
@@ -114,6 +116,31 @@
                     <textarea id="goal-description" rows="3" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="It represents freedom and adventure..." required></textarea>
                 </div>
 
+                <div class="mb-4">
+                    <label for="goal-type" class="block text-gray-400 text-sm font-bold mb-2">What kind of goal is this?</label>
+                    <select id="goal-type" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <option value="">-- Select a type --</option>
+                        <option value="one-time">One-Time Experience or Purchase</option>
+                        <option value="recurring">Recurring Service or Subscription</option>
+                        <option value="fund">Financial Freedom Fund</option>
+                    </select>
+                </div>
+
+                <div id="cost-container" class="mb-6 hidden">
+                    <div id="one-time-cost-prompt" class="hidden">
+                        <label for="one-time-cost" class="block text-gray-400 text-sm font-bold mb-2">What's the total estimated cost? ($)</label>
+                        <input type="number" id="one-time-cost" placeholder="5000" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div id="recurring-cost-prompt" class="hidden">
+                        <label for="recurring-cost" class="block text-gray-400 text-sm font-bold mb-2">What's the estimated monthly cost? ($)</label>
+                        <input type="number" id="recurring-cost" placeholder="150" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                     <div id="fund-cost-prompt" class="hidden">
+                        <label for="fund-cost" class="block text-gray-400 text-sm font-bold mb-2">What's your total savings target? ($)</label>
+                        <input type="number" id="fund-cost" placeholder="20000" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
                 <div class="mb-6">
                     <label for="current-savings" class="block text-gray-400 text-sm font-bold mb-2">Current Savings ($)</label>
                     <input type="number" id="current-savings" placeholder="0" class="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required value="0">
@@ -131,7 +158,7 @@
         <div class="bg-gray-800/80 plan-view rounded-xl p-8 w-full max-w-3xl transform transition-all duration-300 scale-95 opacity-0">
             <div class="flex justify-between items-start">
                  <div>
-                    <h2 id="plan-title" class="text-3xl font-bold mb-2">Your Action Plan</h2>
+                    <h2 id="plan-title" class="text-3xl font-bold mb-2 text-white">Your Action Plan</h2>
                     <h3 id="plan-cost" class="text-xl font-semibold text-green-400 mb-4"></h3>
                  </div>
                  <button type="button" id="close-plan-btn" class="text-gray-400 text-4xl leading-none hover:text-white transition-colors">&times;</button>
@@ -163,6 +190,8 @@
             const uploadContainer = document.getElementById('upload-container');
             const urlContainer = document.getElementById('url-container');
             const photoUrlInput = document.getElementById('photo-url');
+            const goalTypeSelect = document.getElementById('goal-type');
+            const costContainer = document.getElementById('cost-container');
             
             // --- State Management ---
             let goals = [];
@@ -197,28 +226,32 @@
                         goalCard.dataset.id = goal.id;
 
                         let progressHTML = '';
-                        let buttonHTML = `
-                            <button data-id="${goal.id}" class="generate-plan-btn mt-4 bg-indigo-600/80 hover:bg-indigo-500/90 text-white font-bold py-2 px-4 rounded-xl transition-colors backdrop-blur-sm w-full">
-                                <i class="fas fa-magic-wand-sparkles mr-2"></i>Create Plan & Budget
-                            </button>`;
+                        let buttonText = 'Create Plan & Budget';
+                        let buttonClasses = 'bg-indigo-600/80 hover:bg-indigo-500/90';
 
                         if (goal.targetCost > 0) {
                             const percentage = Math.min(100, Math.round((goal.currentSavings / goal.targetCost) * 100));
+                            let targetText = `$${goal.targetCost.toLocaleString()}`;
+                            if (goal.goalType === 'recurring') {
+                                targetText += '/mo';
+                            }
                             progressHTML = `
                                 <div class="mt-4">
                                     <div class="flex justify-between items-center text-sm font-medium">
                                         <span>$${goal.currentSavings.toLocaleString()}</span>
-                                        <span>$${goal.targetCost.toLocaleString()}</span>
+                                        <span>${targetText}</span>
                                     </div>
                                     <div class="w-full bg-gray-200/30 rounded-full h-2.5 mt-1">
                                         <div class="bg-green-500 h-2.5 rounded-full" style="width: ${percentage}%"></div>
                                     </div>
                                 </div>
                             `;
-                            buttonHTML = `
-                                <button data-id="${goal.id}" class="view-plan-btn mt-4 bg-green-600/80 hover:bg-green-500/90 text-white font-bold py-2 px-4 rounded-xl transition-colors backdrop-blur-sm w-full">
-                                    <i class="fas fa-eye mr-2"></i>View Plan (${percentage}%)
-                                </button>`;
+                             if(goal.plan) {
+                                buttonText = `View Plan (${percentage}%)`;
+                                buttonClasses = 'bg-green-600/80 hover:bg-green-500/90';
+                             } else {
+                                buttonText = `Create Plan (${percentage}%)`;
+                             }
                         }
 
                         goalCard.innerHTML = `
@@ -234,7 +267,9 @@
                                 <h3 class="text-2xl font-bold">${goal.title}</h3>
                                 <p class="text-sm text-gray-300 mt-1">${goal.description.substring(0, 100)}...</p>
                                 ${progressHTML}
-                                ${buttonHTML}
+                                <button data-id="${goal.id}" class="generate-plan-btn mt-4 ${buttonClasses} text-white font-bold py-2 px-4 rounded-xl transition-colors backdrop-blur-sm w-full">
+                                    <i class="fas fa-magic-wand-sparkles mr-2"></i>${buttonText}
+                                </button>
                             </div>
                         `;
                         goalsGrid.appendChild(goalCard);
@@ -251,6 +286,10 @@
                 const goalIdInput = document.getElementById('goal-id');
                 
                 goalForm.reset();
+                costContainer.classList.add('hidden');
+                ['one-time-cost-prompt', 'recurring-cost-prompt', 'fund-cost-prompt'].forEach(id => {
+                    document.getElementById(id).classList.add('hidden');
+                });
                 imagePreview.src = '';
                 imagePreview.classList.add('hidden');
 
@@ -265,18 +304,29 @@
                     document.getElementById('goal-description').value = goal.description;
                     document.getElementById('current-savings').value = goal.currentSavings;
                     
+                    if (goal.goalType) {
+                        goalTypeSelect.value = goal.goalType;
+                        goalTypeSelect.dispatchEvent(new Event('change')); // Trigger change to show cost input
+                        if(goal.goalType === 'one-time') document.getElementById('one-time-cost').value = goal.targetCost;
+                        if(goal.goalType === 'recurring') document.getElementById('recurring-cost').value = goal.targetCost;
+                        if(goal.goalType === 'fund') document.getElementById('fund-cost').value = goal.targetCost;
+                    }
+
                     if (goal.image) {
                         imagePreview.src = goal.image;
                         imagePreview.classList.remove('hidden');
                         if (goal.image.startsWith('http')) {
                             document.getElementById('photo-url').value = goal.image;
                             urlTab.click();
+                        } else {
+                            uploadTab.click();
                         }
                     }
                 } else { // Adding a new goal
                     modalTitle.textContent = 'Add a Happy Moment';
                     modalSubmitBtn.textContent = 'Add to Picture Book';
                     goalIdInput.value = '';
+                    uploadTab.click();
                 }
 
                 goalModal.classList.remove('hidden');
@@ -290,45 +340,56 @@
                 }, 300);
             };
 
-            const generatePlan = async (goalId) => {
+            const generatePlan = (goalId) => {
                 const goal = goals.find(g => g.id === goalId);
                 if (!goal) return;
+
+                if (goal.plan) {
+                    viewPlan(goalId);
+                    return;
+                }
+
+                if (!goal.targetCost || goal.targetCost <= 0) {
+                    alert('Please edit this goal and add an estimated cost before creating a plan.');
+                    openGoalModal(goalId);
+                    return;
+                }
                 
                 planModal.classList.remove('hidden');
                 setTimeout(() => planModalContent.classList.add('scale-100', 'opacity-100'), 10);
                 
                 const planContent = document.getElementById('plan-content');
                 document.getElementById('plan-title').textContent = `Action Plan: ${goal.title}`;
-                document.getElementById('plan-cost').textContent = '';
-                planContent.innerHTML = '<div class="flex items-center justify-center p-8"><i class="fas fa-spinner fa-spin fa-3x text-indigo-400"></i><p class="ml-4 text-lg">Dreaming up your plan...</p></div>';
+                let costText = `$${goal.targetCost.toLocaleString()}`;
+                if (goal.goalType === 'recurring') costText += '/month';
+                document.getElementById('plan-cost').textContent = `Estimated Cost: ${costText}`;
 
-                await new Promise(resolve => setTimeout(resolve, 2500)); 
-                let mockResponse;
-                const goalText = (goal.title + ' ' + goal.description).toLowerCase();
-                 if (goalText.includes('renovat') || goalText.includes('backyard') || goalText.includes('kitchen') || goalText.includes('remodel')) {
-                    mockResponse = { plan: `<h3>${goal.title} Plan</h3><p>Here is a detailed plan...</p>`, estimatedCost: 11000 + Math.floor(Math.random() * 5000) };
-                } else { 
-                    mockResponse = { plan: `<h3>Trip to ${goal.title}</h3><p>Here is a detailed plan...</p>`, estimatedCost: 4000 + Math.floor(Math.random() * 2000) };
-                }
+                // MOCK AI CALL
+                planContent.innerHTML = `
+                    <h3>Saving Strategy</h3>
+                    <p>Based on a target of ${costText}, here is a sample plan. To save for this in 6 months, you would need to set aside approximately <strong>$${(goal.targetCost / 6).toFixed(2)} per month</strong>.</p>
+                    <h4>Step 1: Automate Your Savings</h4>
+                    <p>Set up an automatic transfer from your checking account to a dedicated high-yield savings account every month.</p>
+                    <h4>Step 2: Track Your Progress</h4>
+                    <p>Come back here to update your current savings and watch your progress bar grow. Celebrating small wins will keep you motivated!</p>
+                `;
                 
                 const goalIndex = goals.findIndex(g => g.id === goalId);
                 if (goalIndex !== -1) {
-                    goals[goalIndex].plan = mockResponse.plan;
-                    goals[goalIndex].targetCost = mockResponse.estimatedCost;
+                    goals[goalIndex].plan = planContent.innerHTML;
                 }
                 
                 saveGoals(goals);
                 renderGoals();
-                
-                document.getElementById('plan-cost').textContent = `Estimated Cost: $${mockResponse.estimatedCost.toLocaleString()}`;
-                planContent.innerHTML = mockResponse.plan;
             };
 
             const viewPlan = (goalId) => {
                  const goal = goals.find(g => g.id === goalId);
-                 if (!goal) return;
+                 if (!goal || !goal.plan) return;
                  document.getElementById('plan-title').textContent = `Action Plan: ${goal.title}`;
-                 document.getElementById('plan-cost').textContent = `Estimated Cost: $${goal.targetCost.toLocaleString()}`;
+                 let costText = `$${goal.targetCost.toLocaleString()}`;
+                 if (goal.goalType === 'recurring') costText += '/month';
+                 document.getElementById('plan-cost').textContent = `Estimated Cost: ${costText}`;
                  document.getElementById('plan-content').innerHTML = goal.plan;
                  planModal.classList.remove('hidden');
                  setTimeout(() => planModalContent.classList.add('scale-100', 'opacity-100'), 10);
@@ -362,6 +423,23 @@
             urlTab.addEventListener('click', () => {
                 uploadContainer.classList.add('hidden'); urlContainer.classList.remove('hidden');
                 urlTab.classList.add('bg-indigo-600', 'text-white'); uploadTab.classList.remove('bg-indigo-600', 'text-white');
+            });
+            
+            goalTypeSelect.addEventListener('change', (e) => {
+                costContainer.classList.remove('hidden');
+                const promptMapping = {
+                    'one-time': 'one-time-cost-prompt',
+                    'recurring': 'recurring-cost-prompt',
+                    'fund': 'fund-cost-prompt',
+                };
+                // Hide all prompts first
+                Object.values(promptMapping).forEach(id => document.getElementById(id).classList.add('hidden'));
+                // Show the selected one
+                if(e.target.value && promptMapping[e.target.value]) {
+                    document.getElementById(promptMapping[e.target.value]).classList.remove('hidden');
+                } else {
+                     costContainer.classList.add('hidden');
+                }
             });
 
             photoUploadInput.addEventListener('change', (e) => {
@@ -397,12 +475,18 @@
             goalForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const editingId = document.getElementById('goal-id').value;
+                const goalType = goalTypeSelect.value;
+                let targetCost = 0;
+
+                if(goalType === 'one-time') targetCost = parseFloat(document.getElementById('one-time-cost').value) || 0;
+                if(goalType === 'recurring') targetCost = parseFloat(document.getElementById('recurring-cost').value) || 0;
+                if(goalType === 'fund') targetCost = parseFloat(document.getElementById('fund-cost').value) || 0;
 
                 let imageUrl = '';
                 if (!uploadContainer.classList.contains('hidden')) {
                     if (imagePreview.src && imagePreview.src.startsWith('data:image')) {
                         imageUrl = imagePreview.src;
-                    } else if (!editingId) { // Only require upload for new goals
+                    } else if (!editingId) {
                          alert('Please select an image to upload.'); return;
                     }
                 } else {
@@ -416,20 +500,25 @@
                     title: document.getElementById('goal-title').value,
                     description: document.getElementById('goal-description').value,
                     currentSavings: parseFloat(document.getElementById('current-savings').value) || 0,
+                    goalType: goalType,
+                    targetCost: targetCost,
                 };
 
                 if (editingId) { // --- UPDATE EXISTING GOAL ---
                     const goalIndex = goals.findIndex(g => g.id === editingId);
                     if (goalIndex !== -1) {
+                       const originalPlan = goals[goalIndex].plan;
                        goals[goalIndex] = { ...goals[goalIndex], ...goalData };
-                       if (imageUrl) goals[goalIndex].image = imageUrl; // Only update image if new one provided
+                       if (imageUrl) goals[goalIndex].image = imageUrl;
+                       // If cost changes, invalidate old plan
+                       if(goals[goalIndex].targetCost !== targetCost) goals[goalIndex].plan = null;
                     }
                 } else { // --- ADD NEW GOAL ---
+                    if(!imageUrl) { alert('An image is required to add a new goal.'); return; }
                     const newGoal = {
                         ...goalData,
                         id: Date.now().toString(),
                         image: imageUrl,
-                        targetCost: null,
                         plan: null
                     };
                     goals.push(newGoal);
@@ -448,7 +537,6 @@
                 if (!goalId) return;
 
                 if (targetButton.classList.contains('generate-plan-btn')) generatePlan(goalId);
-                else if (targetButton.classList.contains('view-plan-btn')) viewPlan(goalId);
                 else if (targetButton.classList.contains('edit-btn')) openGoalModal(goalId);
                 else if (targetButton.classList.contains('delete-btn')) handleDelete(goalId);
             });
